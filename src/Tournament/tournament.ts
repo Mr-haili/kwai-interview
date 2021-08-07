@@ -1,10 +1,8 @@
 type Dict<TKey extends string, TVal> = { [key in TKey]: TVal };
 
-enum CompetitionResult {
-  Win = "win",
-  Draw = "draw",
-  Loss = "loss",
-}
+const RESULT_TYPES = ["win", "draw", "loss"] as const;
+
+type CompetitionResult = typeof RESULT_TYPES[number];
 
 /**
  * 比赛结果场数记录
@@ -14,7 +12,7 @@ type TeamResultCounts = Dict<CompetitionResult, number>;
 /**
  * 球队比赛结果记录
  */
-type TeamCompetitionResultTable = TeamResultCounts & {
+export type TeamCompetitionResultRecord = TeamResultCounts & {
   /**
    * 球队名
    */
@@ -31,20 +29,18 @@ type TeamCompetitionResultTable = TeamResultCounts & {
 
 type TeamCompetitionResultTableDict<TName extends string = string> = Map<
   TName,
-  TeamCompetitionResultTable
+  TeamCompetitionResultRecord
 >;
 
-const RESULT_POINT_DICT = {
-  [CompetitionResult.Win]: 3,
-  [CompetitionResult.Draw]: 1,
-  [CompetitionResult.Loss]: 0,
-} as const;
-
-const RESULT_TYPES = [
-  CompetitionResult.Win,
-  CompetitionResult.Loss,
-  CompetitionResult.Draw,
-] as const;
+const RESULT_POINT_DICT = (<
+  TDict extends { [key in CompetitionResult]: number }
+>(
+  dict: TDict
+): TDict => dict)({
+  draw: 1,
+  loss: 0,
+  win: 3,
+} as const);
 
 const addResultCount = (
   aStatus: TeamResultCounts,
@@ -52,17 +48,17 @@ const addResultCount = (
   result: CompetitionResult
 ): void => {
   switch (result) {
-    case CompetitionResult.Win:
-      aStatus[CompetitionResult.Win] += 1;
-      bStatus[CompetitionResult.Loss] += 1;
+    case "win":
+      aStatus.win += 1;
+      bStatus.loss += 1;
       break;
-    case CompetitionResult.Loss:
-      aStatus[CompetitionResult.Loss] += 1;
-      bStatus[CompetitionResult.Win] += 1;
+    case "loss":
+      aStatus.loss += 1;
+      bStatus.win += 1;
       break;
-    case CompetitionResult.Draw:
-      aStatus[CompetitionResult.Draw] += 1;
-      bStatus[CompetitionResult.Draw] += 1;
+    case "draw":
+      aStatus.draw += 1;
+      bStatus.draw += 1;
       break;
   }
 };
@@ -74,14 +70,14 @@ const getTeamTable = (
   if (!dict.has(name)) {
     dict.set(name, {
       name,
-      [CompetitionResult.Win]: 0,
-      [CompetitionResult.Loss]: 0,
-      [CompetitionResult.Draw]: 0,
+      win: 0,
+      loss: 0,
+      draw: 0,
       matchesPlayed: 0,
       points: 0,
     });
   }
-  return dict.get(name) as TeamCompetitionResultTable;
+  return dict.get(name) as TeamCompetitionResultRecord;
 };
 
 const calcTeamPoints = (teamStatus: TeamResultCounts): number =>
@@ -96,7 +92,7 @@ const calcTeamMatchesPlayed = (teamStatus: TeamResultCounts): number =>
 
 export const tournament = (
   lines: ReadonlyArray<string>
-): TeamCompetitionResultTable[] => {
+): TeamCompetitionResultRecord[] => {
   const dict: TeamCompetitionResultTableDict = new Map();
 
   // 记录各个球队的比赛结果计数
