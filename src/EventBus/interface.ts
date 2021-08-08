@@ -5,6 +5,6 @@ export type EventBus<T extends object> = {
   ) => void;
   listen: <TEvtName extends keyof T>(
     evtName: TEvtName,
-    callback: (payload: T[TEvtName]) => void
+    callback: (this: Pick<EventBus<T>, "trigger">, payload: T[TEvtName]) => void
   ) => void;
 };
