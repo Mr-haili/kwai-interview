@@ -1,51 +1,16 @@
-type Dict<TKey extends string, TVal> = { [key in TKey]: TVal };
-
-const RESULT_TYPES = ["win", "draw", "loss"] as const;
-
-type CompetitionResult = typeof RESULT_TYPES[number];
-
-/**
- * 比赛结果场数记录
- */
-type TeamResultCounts = Dict<CompetitionResult, number>;
-
-/**
- * 球队比赛结果记录
- */
-export type TeamCompetitionResultRecord = TeamResultCounts & {
-  /**
-   * 球队名
-   */
-  name: string;
-  /**
-   * 总得分
-   */
-  points: number;
-  /**
-   * 参与比赛
-   */
-  matchesPlayed: number;
-};
-
-type TeamCompetitionResultTableDict<TName extends string = string> = Map<
-  TName,
-  TeamCompetitionResultRecord
->;
-
-const RESULT_POINT_DICT = (<
-  TDict extends { [key in CompetitionResult]: number }
->(
-  dict: TDict
-): TDict => dict)({
-  draw: 1,
-  loss: 0,
-  win: 3,
-} as const);
+import { RESULT_POINT_DICT, RESULT_TYPES } from "./constant";
+import {
+  TeamResultCounts,
+  CompetitionResultType,
+  TeamCompetitionResultTableDict,
+  TeamCompetitionResultRecord,
+  ICompetitionResultRecord,
+} from "./interface";
 
 const addResultCount = (
   aStatus: TeamResultCounts,
   bStatus: TeamResultCounts,
-  result: CompetitionResult
+  result: CompetitionResultType
 ): void => {
   switch (result) {
     case "win":
@@ -91,23 +56,18 @@ const calcTeamMatchesPlayed = (teamStatus: TeamResultCounts): number =>
   }, 0);
 
 export const tournament = (
-  lines: ReadonlyArray<string>
+  records: ReadonlyArray<ICompetitionResultRecord>
 ): TeamCompetitionResultRecord[] => {
   const dict: TeamCompetitionResultTableDict = new Map();
 
   // 记录各个球队的比赛结果计数
-  for (const line of lines) {
-    const [nameA, nameB, result] = line.split(";") as [
-      string,
-      string,
-      CompetitionResult
-    ];
+  records.forEach((record) =>
     addResultCount(
-      getTeamTable(dict, nameA),
-      getTeamTable(dict, nameB),
-      result
-    );
-  }
+      getTeamTable(dict, record.nameA),
+      getTeamTable(dict, record.nameB),
+      record.result
+    )
+  );
 
   // 计算各个球队的比赛场数和得分
   dict.forEach((resultItem) => {
@@ -123,5 +83,6 @@ export const tournament = (
     }
     return a.name < b.name ? -1 : 1;
   });
+
   return resultTables;
 };
