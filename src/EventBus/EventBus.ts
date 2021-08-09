@@ -1,6 +1,6 @@
+import { EventBus, EventTask } from "./interface";
 import { createTask, TaskProcess } from "./TaskProcess";
-import { TaskFunc, ITask } from "./TaskProcess/interface";
-import { EventBus } from "./interface";
+import { TaskFunc } from "./TaskProcess/interface";
 
 type CallbacksMap = Map<string, Set<Function>>;
 
@@ -15,22 +15,23 @@ const createEventTaskFn = (
   const callbacks = Array.from(callbacksMap.get(evtName) || []);
   const taskFunc: TaskFunc = async ({ addChildTask }) => {
     callbacks.forEach((callback) => {
-      // TODO: 保证 callback 的上下文是当前的 evtBus
-      addChildTask(callback.name, async (ctx) => {
-        const childEventTrigger = (evtName: string, payload: any) => {
-          const innerTaskFunc = createEventTaskFn(
-            callbacksMap,
-            evtName,
+      addChildTask({
+        type: "callback",
+        name: callback.name,
+        func: async (ctx) => {
+          const childEventTrigger = (evtName: string, payload: any) => {
+            console.log("触发子任务", evtName);
+            ctx.addChildTask(createEventTask(callbacksMap, evtName, payload));
+          };
+
+          // 保证 callback 的 this 上有 trigger 方法
+          await callback.call(
+            {
+              trigger: childEventTrigger,
+            },
             payload
           );
-          ctx.addChildTask(evtName, innerTaskFunc);
-        };
-        await callback.call(
-          {
-            trigger: childEventTrigger,
-          },
-          payload
-        );
+        },
       });
     });
   };
@@ -46,7 +47,8 @@ const createEventTask = (
   payload: any
 ) => {
   const taskFunc = createEventTaskFn(callbacksMap, evtName, payload);
-  const eventTask: ITask = createTask({
+  const eventTask: EventTask = createTask({
+    type: "event",
     func: taskFunc,
     name: evtName,
     parent: null,
@@ -92,19 +94,25 @@ const evtBus = createEventBus<{
   scroll: { pos: number; time: number };
 }>();
 
-evtBus.listen("click", function (payload) {
-  console.log(`listen click 1`, payload);
-  this.trigger("scroll", {
-    pos: 1,
-    time: 2,
+evtBus.listen("click", async function clickListen1(payload) {
+  await new Promise<void>((resolve) => {
+    setTimeout(() => {
+      console.log(`\ncallback click1`, payload, "\n");
+      this.trigger("scroll", {
+        pos: 1,
+        time: 2,
+      });
+      resolve();
+    }, 2000);
   });
 });
-evtBus.listen("click", (payload) => {
-  console.log(`listen click 2`, payload);
+evtBus.listen("click", async function clickListen2(payload) {
+  console.log(`\ncallback click2`, payload, "\n");
 });
-evtBus.listen("scroll", (payload) => {
-  console.log(`listen 1`, payload);
+
+evtBus.listen("scroll", async function clickScroll1(payload) {
+  console.log(`\ncallback scroll1`, payload, "\n");
 });
 
 evtBus.trigger("click", 666);
-evtBus.trigger("click", "走进科学");
+// evtBus.trigger("click", "走进科学");

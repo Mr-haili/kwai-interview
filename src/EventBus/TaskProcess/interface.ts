@@ -1,12 +1,13 @@
-interface ITaskFuncContext {
-  addChildTask: (name: string, fn: TaskFunc) => void;
+export interface ITaskFuncContext<TType extends string = string> {
+  addChildTask: (ctx: { type: TType; name: string; func: TaskFunc }) => void;
 }
 
 export type TaskFunc = (ctx: ITaskFuncContext) => Promise<void>;
 
 export type TaskStatus = "executing" | "toBeStarted" | "finish";
 
-export interface ITask<> {
+export interface ITask<TType extends string = string> {
+  type: TType;
   /**
    * 任务名
    */

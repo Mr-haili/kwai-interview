@@ -1,11 +1,11 @@
 import { ITask } from "./interface";
 
-export const createTask = (
-  props: Pick<ITask, "name" | "func"> &
+export const createTask = <TType extends string>(
+  props: Pick<ITask<TType>, "name" | "func" | "type"> &
     Partial<Pick<ITask, "children" | "parent">>
-): ITask => {
+): ITask<TType> => {
   const { children = [], parent = null, ...rest } = props;
-  const task: ITask = {
+  const task: ITask<TType> = {
     ...rest,
     parent,
     children,
@@ -15,7 +15,7 @@ export const createTask = (
     },
     status: "toBeStarted",
     isExecuted: false,
-    childTaskOffset: -1,
+    childTaskOffset: 0,
   };
   return task;
 };

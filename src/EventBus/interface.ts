@@ -1,3 +1,11 @@
+import { ITask } from "./TaskProcess/interface";
+
+export type EventBusTaskType = "event" | "callback";
+
+export type EventTask = ITask<"event">;
+
+export type CallbackTask = ITask<"callback">;
+
 export type EventBus<T extends object> = {
   trigger: <TEvtName extends keyof T>(
     evtName: TEvtName,
