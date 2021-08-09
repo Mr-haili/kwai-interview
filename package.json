@@ -7,9 +7,12 @@
   "license": "MIT",
   "private": false,
   "scripts": {
-    "dev": "tsc"
+    "q1": "ts-node ./src/Tournament/test.ts",
+    "q2": "ts-node ./src/OrderedLinkList/index.ts",
+    "q5": "ts-node ./src/EventBus/EventBus.ts"
   },
   "devDependencies": {
+    "ts-node": "^10.2.0",
     "typescript": "^4.3.5"
   }
 }

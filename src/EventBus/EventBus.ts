@@ -5,6 +5,7 @@ import {
   printTaskProcesHistoryCallStack,
   printTaskProcessCallStack,
 } from "./TaskProcess/utils";
+import { sleep } from "./utils";
 
 type CallbacksMap = Map<string, Set<Function>>;
 
@@ -99,23 +100,21 @@ const evtBus = createEventBus<{
 }>();
 
 evtBus.listen("click", async function clickListen1(payload) {
-  await new Promise<void>((resolve) => {
-    setTimeout(() => {
-      console.log(`callback click1`, payload);
-      this.trigger("scroll", {
-        pos: 1,
-        time: 2,
-      });
-      resolve();
-    }, 200);
+  await sleep(100);
+  console.log(`callback click1`, payload);
+  this.trigger("scroll", {
+    pos: 1,
+    time: 2,
   });
 });
 
 evtBus.listen("click", async function clickListen2(payload) {
+  await sleep(2000);
   console.log(`callback click2`, payload);
 });
 
 evtBus.listen("scroll", async function clickScroll1(payload) {
+  await sleep(2000);
   console.log(`callback scroll1`, payload);
   printTaskProcessCallStack(evtBus.taskProcessMap.values().next().value);
 });
