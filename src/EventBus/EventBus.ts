@@ -1,7 +1,10 @@
 import { EventBus, EventTask } from "./interface";
 import { createTask, TaskProcess } from "./TaskProcess";
 import { TaskFunc } from "./TaskProcess/interface";
-import { printTaskProcessCallStack } from "./TaskProcess/utils";
+import {
+  printTaskProcesHistoryCallStack,
+  printTaskProcessCallStack,
+} from "./TaskProcess/utils";
 
 type CallbacksMap = Map<string, Set<Function>>;
 
@@ -119,3 +122,7 @@ evtBus.listen("scroll", async function clickScroll1(payload) {
 
 evtBus.trigger("click", 666);
 // evtBus.trigger("click", "走进科学");
+
+setTimeout(() => {
+  printTaskProcesHistoryCallStack(evtBus.taskProcessMap.values().next().value);
+}, 5000);
