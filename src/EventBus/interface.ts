@@ -1,3 +1,4 @@
+import { TaskProcess } from "./TaskProcess";
 import { ITask } from "./TaskProcess/interface";
 
 export type EventBusTaskType = "event" | "callback";
@@ -15,4 +16,5 @@ export type EventBus<T extends object> = {
     evtName: TEvtName,
     callback: (this: Pick<EventBus<T>, "trigger">, payload: T[TEvtName]) => void
   ) => void;
+  taskProcessMap: Map<number, TaskProcess>;
 };

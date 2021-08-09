@@ -60,10 +60,10 @@ export class TaskProcess {
       return;
     }
     if (!curTask.isExecuted) {
-      console.log(`执行任务 ${curTask.name}`);
+      // console.log(`执行任务 ${curTask.name}`);
       // 任务执行函数是需要外部来提供的
       const addChildTask: ITaskFuncContext<string>["addChildTask"] = (args) => {
-        console.log(`添加任务: ${args.type} ${args.name}`);
+        // console.log(`添加任务: ${args.type} ${args.name}`);
         const task = createTask({
           ...args,
           parent: curTask,

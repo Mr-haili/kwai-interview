@@ -1,11 +1,12 @@
 import { EventBus, EventTask } from "./interface";
 import { createTask, TaskProcess } from "./TaskProcess";
 import { TaskFunc } from "./TaskProcess/interface";
+import { printTaskProcessCallStack } from "./TaskProcess/utils";
 
 type CallbacksMap = Map<string, Set<Function>>;
 
 /**
- * TODO: 写这个函数的时候，思路已经有点混乱了
+ * TODO: 写这个函数的时候状态不太好
  */
 const createEventTaskFn = (
   callbacksMap: CallbacksMap,
@@ -20,7 +21,7 @@ const createEventTaskFn = (
         name: callback.name,
         func: async (ctx) => {
           const childEventTrigger = (evtName: string, payload: any) => {
-            console.log("触发子任务", evtName);
+            // console.log("触发子任务", evtName);
             ctx.addChildTask(createEventTask(callbacksMap, evtName, payload));
           };
 
@@ -64,7 +65,6 @@ const createEventBus = <T extends object>(): EventBus<T> => {
 
   // 用于触发独立的任务进程
   const taskProcessTrigger = (evtName: string, payload: any): void => {
-    console.log("taskProcessTrigger", evtName, payload);
     const eventTask = createEventTask(callbacksMap, evtName, payload);
     const taskProcess = new TaskProcess(eventTask);
     taskProcessMap.set(taskProcess.processId, taskProcess);
@@ -85,6 +85,7 @@ const createEventBus = <T extends object>(): EventBus<T> => {
 
   evtBus.trigger = taskProcessTrigger;
   evtBus.listen = listen;
+  evtBus.taskProcessMap = taskProcessMap;
 
   return evtBus;
 };
@@ -97,21 +98,23 @@ const evtBus = createEventBus<{
 evtBus.listen("click", async function clickListen1(payload) {
   await new Promise<void>((resolve) => {
     setTimeout(() => {
-      console.log(`\ncallback click1`, payload, "\n");
+      console.log(`callback click1`, payload);
       this.trigger("scroll", {
         pos: 1,
         time: 2,
       });
       resolve();
-    }, 2000);
+    }, 200);
   });
 });
+
 evtBus.listen("click", async function clickListen2(payload) {
-  console.log(`\ncallback click2`, payload, "\n");
+  console.log(`callback click2`, payload);
 });
 
 evtBus.listen("scroll", async function clickScroll1(payload) {
-  console.log(`\ncallback scroll1`, payload, "\n");
+  console.log(`callback scroll1`, payload);
+  printTaskProcessCallStack(evtBus.taskProcessMap.values().next().value);
 });
 
 evtBus.trigger("click", 666);
